@@ -5,7 +5,7 @@ defmodule Components.PieCell do
 
   def main(assigns) do
     ptf = assigns[:ptf]
-    spec = build_pie_chart(ptf[:data])
+    spec = build_pie_chart(ptf["data"])
 
     bin = VegaLite.Convert.to_html(spec)
     safe_svg = raw(bin)
@@ -13,10 +13,10 @@ defmodule Components.PieCell do
     assigns = assigns |> Map.put(:graph, safe_svg)
 
     ~H"""
-    <div class="flex flex-col gap-2 w-full">
+    <div class="flex flex-col w-full gap-2">
       <h2 class="text-xl font-semibold">{@title}</h2>
       <div class="flex items-center justify-center">
-        <%= @graph %>
+        {@graph}
       </div>
     </div>
     """
@@ -31,7 +31,7 @@ defmodule Components.PieCell do
       Vl.new(width: 400, height: 200)
       |> Vl.data_from_values(prepared)
       |> Vl.encode_field(:theta, "total", type: :quantitative, stack: true)
-      |> Vl.encode_field(:color, "instrument", type: :nominal)
+      |> Vl.encode_field(:color, "instrument", type: :nominal, scale: [scheme: "set2"])
 
     arc_layer =
       base
@@ -47,22 +47,24 @@ defmodule Components.PieCell do
   end
 
   defp prepare_top5(data, count \\ 5) do
-    sum = data |> Enum.sum_by(& &1[:value])
+    sum = data |> Enum.sum_by(& &1["value"])
 
     sorted =
       data
-      |> Enum.map(&Map.put(&1, :value, &1[:value] / sum))
-      |> Enum.sort_by(& &1[:value], &>=/2)
+      |> Enum.map(&Map.put(&1, "value", &1["value"] / sum))
+      |> Enum.sort_by(& &1["value"], &>=/2)
 
     {top, rest} = Enum.split(sorted, count)
 
     others_total =
       rest
-      |> Enum.map(& &1[:value])
+      |> Enum.map(& &1["value"])
       |> Enum.reduce(0, fn v, acc -> acc + v end)
 
     top_mapped =
-      Enum.map(top, fn %{id: id, value: value} -> %{instrument: to_string(id), total: value} end)
+      Enum.map(top, fn %{"id" => id, "value" => value} ->
+        %{instrument: to_string(id), total: value}
+      end)
 
     all = top_mapped ++ [%{instrument: "Others", total: others_total}]
 

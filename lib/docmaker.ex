@@ -3,4 +3,8 @@ defmodule Docmaker do
     safe = Phoenix.HTML.Safe.to_iodata(rendered)
     File.write!(target_path, safe)
   end
+
+  def render(rendered) do
+    Phoenix.HTML.Safe.to_iodata(rendered)
+  end
 end

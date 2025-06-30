@@ -1,39 +1,42 @@
 defmodule Components.TableCell do
   use Phoenix.Component
 
+  attr :data, :map, required: true
+  attr :columns, :list, default: []
+
   def main(assigns) do
-    assigns =
-      assigns
-      |> Map.put(
-        :columns,
-        assigns.data
-        |> List.first()
-        |> Map.keys()
-      )
+    columns =
+      if assigns.columns == [] do
+        assigns.data |> List.first() |> Map.keys()
+      else
+        assigns.columns
+      end
+
+    assigns = assigns |> Map.put(:columns, columns)
 
     ~H"""
-    <div class="flex flex-col gap-2 w-full">
-      <h2 class="text-xl font-semibold">{@title}</h2>
-      <div class="overflow-x-auto w-full">
-        <table class="table-auto w-full divide-y divide-gray-200">
+    <div class="flex flex-col justify-start w-full gap-2">
+      <div class="w-full overflow-x-auto">
+        <table class="w-full divide-y divide-gray-200 table-auto">
           <thead class="bg-gray-50">
-            <tr>
-
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" :for={col <- @columns}>
-                  <%= col
-                    |> to_string()
-                    |> String.replace("_", " ")
-                    |> String.capitalize() %>
-                </th>
-
+            <tr class="h-8">
+              <th
+                :for={col <- @columns}
+                class="px-4 py-2 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+              >
+                {col
+                |> to_string()
+                |> String.replace("_", " ")
+                |> String.capitalize()}
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <%= for row <- @data do %>
-              <tr>
+              <tr class="h-8">
                 <%= for col <- @columns do %>
-                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
-                    <%= Map.get(row, col) %>
+                  <td class="px-4 py-1 text-xs text-gray-700 whitespace-nowrap">
+                    {Map.get(row, col)}
                   </td>
                 <% end %>
               </tr>
@@ -42,7 +45,6 @@ defmodule Components.TableCell do
         </table>
       </div>
     </div>
-
     """
   end
 end
